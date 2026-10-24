@@ -26,16 +26,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
+    let userRole = user.role;
+    const adminEmails = [
+      process.env.SUPER_ADMIN_EMAIL?.toLowerCase().trim(),
+      "kentjigga@gmail.com",
+      "admin@thesantacircle.com",
+    ].filter(Boolean);
+
+    if (adminEmails.includes(cleanEmail) && userRole !== "ADMIN") {
+      userRole = "ADMIN";
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { role: "ADMIN" },
+      });
+    }
+
     await setSessionCookie({
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: userRole,
     });
 
     return NextResponse.json({
       success: true,
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      user: { id: user.id, email: user.email, name: user.name, role: userRole },
     });
   } catch (err: unknown) {
     console.error("[Login API Error]:", err);

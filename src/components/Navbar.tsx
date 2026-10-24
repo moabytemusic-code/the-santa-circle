@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Gift, Sparkles, User, Shield, LogOut, Menu, X, Heart } from "lucide-react";
+import { Gift, Sparkles, User, Shield, LogOut, Menu, X, Heart, Crown } from "lucide-react";
 import { Role } from "@prisma/client";
 
 interface NavbarProps {
@@ -38,6 +38,7 @@ export function Navbar({ user }: NavbarProps) {
 
   if (user?.role === "ADMIN") {
     navLinks.push({ href: "/admin", label: "Host Panel", icon: Shield });
+    navLinks.push({ href: "/super-admin", label: "Super Admin", icon: Crown });
   }
 
   return (
