@@ -3,7 +3,7 @@
  * Automatically appends the SantaCircle Associate tag to Amazon product links.
  */
 
-const DEFAULT_AMAZON_TAG = process.env.AMAZON_AFFILIATE_TAG || "thesantacircle-20";
+const DEFAULT_AMAZON_TAG = process.env.AMAZON_AFFILIATE_TAG || "santa101-20";
 
 /**
  * Checks if a URL belongs to Amazon (including shortened amzn.to links).
