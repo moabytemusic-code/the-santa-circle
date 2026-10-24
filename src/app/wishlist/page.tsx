@@ -293,6 +293,15 @@ export default function WishlistPage() {
             </h2>
           </div>
 
+          {/* Amazon & Store Link Tip Banner */}
+          <div className="p-3.5 rounded-xl bg-[#144534]/70 border border-[#d4af37]/40 flex items-center gap-3 text-xs text-slate-200 shadow-sm">
+            <span className="text-xl shrink-0">💡</span>
+            <div>
+              <span className="font-bold text-[#f3c053]">Amazon & Store Links Welcome:</span>{" "}
+              Paste links from <span className="text-white font-semibold underline decoration-[#f3c053]">Amazon</span>, Target, or any store when adding items so your Secret Santa knows the exact size, color, or model you want!
+            </div>
+          </div>
+
           {wishList.items.length > 0 ? (
             <div className="space-y-3">
               {wishList.items.map((item) => (
@@ -449,17 +458,23 @@ export default function WishlistPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="itemUrl">
-                  Web Link (Store or Product URL)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-300" htmlFor="itemUrl">
+                    Web Link (Amazon or Online Store)
+                  </label>
+                  <span className="text-[10px] text-[#f3c053] font-bold">🛒 Amazon Links Supported</span>
+                </div>
                 <input
                   id="itemUrl"
                   type="url"
                   value={itemUrl}
                   onChange={(e) => setItemUrl(e.target.value)}
-                  placeholder="https://example.com/item..."
+                  placeholder="https://www.amazon.com/dp/... or store URL"
                   className="w-full px-3 py-2 rounded-lg bg-[#0b2b20] border border-[#1d5943] text-sm text-slate-100 placeholder-slate-500 focus:border-[#d4af37] focus:outline-none"
                 />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Paste an Amazon product link (or any store) so your Secret Santa can order the exact item!
+                </p>
               </div>
 
               <div className="flex justify-end space-x-3 pt-3 border-t border-[#1d5943]">

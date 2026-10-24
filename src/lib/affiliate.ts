@@ -49,3 +49,18 @@ export function tagAmazonUrl(urlStr: string, customTag?: string): string {
     return urlStr;
   }
 }
+
+/**
+ * Scans a text string and auto-tags any Amazon URLs found within it.
+ */
+export function tagTextAmazonUrls(text: string, customTag?: string): string {
+  if (!text) return text;
+  const tag = customTag || DEFAULT_AMAZON_TAG;
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  return text.replace(urlRegex, (match) => {
+    if (isAmazonUrl(match)) {
+      return tagAmazonUrl(match, tag);
+    }
+    return match;
+  });
+}

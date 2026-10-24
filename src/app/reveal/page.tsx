@@ -410,14 +410,24 @@ export default function RevealPage() {
                         )}
                       </div>
 
-                      {item.url && (
+                      {item.url ? (
                         <a
                           href={item.url}
                           target="_blank"
                           rel="noopener noreferrer sponsored"
-                          className="px-4 py-1.5 rounded-lg bg-[#144534] hover:bg-[#1d5943] border border-[#d4af37]/40 text-xs text-[#f3c053] font-semibold transition shrink-0"
+                          className="px-4 py-1.5 rounded-lg bg-[#144534] hover:bg-[#1d5943] border border-[#d4af37]/40 text-xs text-[#f3c053] font-semibold transition shrink-0 flex items-center space-x-1"
                         >
-                          View Item Link &rarr;
+                          <span>{item.url.includes("amazon.") ? "Buy on Amazon 🛒 ↗" : "View Item Link →"}</span>
+                        </a>
+                      ) : (
+                        <a
+                          href={`https://www.amazon.com/s?k=${encodeURIComponent(item.title)}&tag=santa101-20`}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="px-3.5 py-1.5 rounded-lg bg-[#144534]/80 hover:bg-[#1d5943] border border-amber-500/30 text-xs text-amber-300 font-medium transition shrink-0 flex items-center space-x-1"
+                          title="Search for this item on Amazon"
+                        >
+                          <span>Find on Amazon 🔍</span>
                         </a>
                       )}
                     </div>
