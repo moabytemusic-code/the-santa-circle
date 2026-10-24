@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     }
 
     if (exchange.isPremium) {
-      return NextResponse.json({ message: "This exchange is already upgraded to Host Pass!" });
+      return NextResponse.json({ alreadyPremium: true, message: "This exchange is already upgraded to Host Pass!" });
     }
 
     const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
@@ -55,6 +55,7 @@ export async function POST(req: Request) {
       (host ? `${proto}://${host}` : "https://thesantacircle.com");
 
     const checkoutSession = await stripe.checkout.sessions.create({
+      ui_mode: "embedded",
       line_items: [
         {
           price_data: {
@@ -77,11 +78,10 @@ export async function POST(req: Request) {
         userId: session.id,
         exchangeName: exchange.name,
       },
-      success_url: `${appUrl}/admin?upgraded=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/admin?canceled=true`,
+      return_url: `${appUrl}/admin?upgraded=true&session_id={CHECKOUT_SESSION_ID}`,
     });
 
-    return NextResponse.json({ url: checkoutSession.url });
+    return NextResponse.json({ clientSecret: checkoutSession.client_secret });
   } catch (err: unknown) {
     console.error("[Stripe Checkout Error]:", err);
     return NextResponse.json(

@@ -25,7 +25,10 @@ import {
   Bell,
   Mail,
   Crown,
+  X,
 } from "lucide-react";
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
+import { getStripe } from "@/lib/stripe-client";
 
 interface Member {
   id: string;
@@ -95,6 +98,8 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [upgrading, setUpgrading] = useState(false);
+  const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   // Invite form state
   const [inviteEmail, setInviteEmail] = useState("");
@@ -210,7 +215,7 @@ export default function AdminPage() {
     }
   }, []);
 
-  // Upgrade to Host Pass via Stripe Checkout
+  // Upgrade to Host Pass via In-App Stripe Embedded Checkout
   const handleUpgradeHostPass = async () => {
     if (!exchange) return;
     setUpgrading(true);
@@ -223,11 +228,15 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to start checkout");
-      if (data.url) {
+      if (data.clientSecret) {
+        setCheckoutClientSecret(data.clientSecret);
+        setShowCheckoutModal(true);
+      } else if (data.url) {
         window.location.href = data.url;
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to initiate Host Pass upgrade");
+    } finally {
       setUpgrading(false);
     }
   };
@@ -1627,6 +1636,45 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* In-App Embedded Stripe Checkout Modal */}
+      {showCheckoutModal && checkoutClientSecret && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-2xl bg-[#0b2b20] border-2 border-[#d4af37] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#1d5943] pb-3">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#d4af37] text-[#0b2b20] flex items-center justify-center font-bold">
+                  <Crown className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[#fef9ee] font-festive">Host Pass Upgrade ($7.99)</h2>
+                  <p className="text-xs text-[#f3c053]">One-time fee • Unlocks unlimited members & perks</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCheckoutModal(false);
+                  setCheckoutClientSecret(null);
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#144534] transition"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div id="checkout" className="rounded-xl overflow-hidden bg-white/5 p-2 min-h-[400px]">
+              <EmbeddedCheckoutProvider
+                stripe={getStripe()}
+                options={{ clientSecret: checkoutClientSecret }}
+              >
+                <EmbeddedCheckout />
+              </EmbeddedCheckoutProvider>
+            </div>
           </div>
         </div>
       )}

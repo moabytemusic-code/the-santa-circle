@@ -8,6 +8,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+        - NEXT_PUBLIC_APP_URL=${COOLIFY_URL:-https://thesantacircle.com}
     restart: unless-stopped
     expose:
       - 3000
@@ -21,6 +24,7 @@ services:
       - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-The Santa Circle}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
       - AMAZON_AFFILIATE_TAG=${AMAZON_AFFILIATE_TAG:-thesantacircle-20}
       - UPLOAD_DIR=/app/uploads/music
       - MAX_UPLOAD_SIZE_MB=${MAX_UPLOAD_SIZE_MB:-15}
