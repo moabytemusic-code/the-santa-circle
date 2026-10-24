@@ -88,6 +88,9 @@ CREATE TABLE IF NOT EXISTS "GiftExchange" (
     "instructions" TEXT,
     "status" "ExchangeStatus" NOT NULL DEFAULT 'DRAFT',
     "drawnAt" TIMESTAMP(3),
+    "isPremium" BOOLEAN NOT NULL DEFAULT false,
+    "stripeSessionId" TEXT,
+    "stripeCustomerId" TEXT,
     "createdById" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -234,3 +237,8 @@ CREATE INDEX IF NOT EXISTS "GiftProgress_exchangeId_idx" ON "GiftProgress"("exch
 CREATE INDEX IF NOT EXISTS "GiftProgress_giverId_idx" ON "GiftProgress"("giverId");
 CREATE INDEX IF NOT EXISTS "MusicTrack_category_idx" ON "MusicTrack"("category");
 CREATE INDEX IF NOT EXISTS "MusicTrack_isActive_idx" ON "MusicTrack"("isActive");
+
+-- Idempotent upgrades for Host Pass & monetization
+ALTER TABLE "GiftExchange" ADD COLUMN IF NOT EXISTS "isPremium" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "GiftExchange" ADD COLUMN IF NOT EXISTS "stripeSessionId" TEXT;
+ALTER TABLE "GiftExchange" ADD COLUMN IF NOT EXISTS "stripeCustomerId" TEXT;
