@@ -1,0 +1,59 @@
+services:
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: christmas_app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3001}:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-christmas_secret_pass}@db:5432/${POSTGRES_DB:-christmas_together}?schema=public
+      - AUTH_SECRET=${AUTH_SECRET:-super-secret-christmas-together-jwt-encryption-key-32-chars}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - BREVO_API_KEY=${BREVO_API_KEY:-}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-santa@familydomain.com}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Christmas Together}
+      - UPLOAD_DIR=/app/uploads/music
+      - MAX_UPLOAD_SIZE_MB=${MAX_UPLOAD_SIZE_MB:-15}
+    volumes:
+      - music_uploads:/app/uploads/music
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - christmas_network
+
+  # Dedicated PostgreSQL Database Container
+  db:
+    image: postgres:16-alpine
+    container_name: christmas_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-christmas_together}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-christmas_secret_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-christmas_together} || exit 1"]
+      interval: 4s
+      timeout: 3s
+      retries: 15
+      start_period: 15s
+    networks:
+      - christmas_network
+
+volumes:
+  postgres_data:
+    name: christmas_postgres_data
+  music_uploads:
+    name: christmas_music_uploads
+
+networks:
+  christmas_network:
+    name: christmas_network
+    driver: bridge

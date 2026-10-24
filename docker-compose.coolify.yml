@@ -1,0 +1,58 @@
+# ==============================================================================
+# Christmas Together - Coolify Deployment Compose File
+# Fully self-hosted Next.js + PostgreSQL + Persistent Storage
+# ==============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - 3000
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-christmas_together}?schema=public
+      - AUTH_SECRET=${AUTH_SECRET}
+      - NEXT_PUBLIC_APP_URL=${COOLIFY_URL:-http://localhost:3000}
+      - BREVO_API_KEY=${BREVO_API_KEY:-}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-santa@familydomain.com}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Christmas Together}
+      - UPLOAD_DIR=/app/uploads/music
+      - MAX_UPLOAD_SIZE_MB=${MAX_UPLOAD_SIZE_MB:-15}
+    volumes:
+      - music_uploads:/app/uploads/music
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - default
+      - coolify
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-christmas_together}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-christmas_together} || exit 1"]
+      interval: 4s
+      timeout: 3s
+      retries: 15
+      start_period: 15s
+    networks:
+      - default
+
+volumes:
+  postgres_data:
+  music_uploads:
+
+networks:
+  default:
+  coolify:
+    external: true

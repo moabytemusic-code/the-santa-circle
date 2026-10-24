@@ -1,0 +1,394 @@
+// Prisma Schema for Christmas Together
+// Private Family Secret Santa Web Application
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum FamilyRole {
+  ADMIN
+  MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum ExchangeStatus {
+  DRAFT
+  CONFIRMING
+  READY_TO_DRAW
+  DRAWN
+  COMPLETED
+  ARCHIVED
+}
+
+enum ParticipantStatus {
+  INVITED
+  CONFIRMED
+  DECLINED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ProgressStatus {
+  PLANNING
+  SHOPPING
+  PURCHASED
+  WRAPPED
+  COMPLETED
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum MusicCategory {
+  CLASSIC
+  INSTRUMENTAL
+  PEACEFUL
+  FESTIVE
+  CUSTOM
+}
+
+enum MusicSource {
+  BUILTIN
+  UPLOADED
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String
+  name           String
+  role           Role      @default(USER)
+  avatarUrl      String?
+  emailVerified  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  memberships       FamilyMembership[]
+  createdGroups     FamilyGroup[]          @relation("GroupCreator")
+  createdExchanges  GiftExchange[]         @relation("ExchangeCreator")
+  participations    ExchangeParticipant[]
+  givenAssignments  GiftAssignment[]       @relation("GiverAssignments")
+  receivedAssignments GiftAssignment[]     @relation("RecipientAssignments")
+  exclusionRulesA   ExclusionRule[]        @relation("ExclusionA")
+  exclusionRulesB   ExclusionRule[]        @relation("ExclusionB")
+  wishLists         WishList[]
+  giftProgresses    GiftProgress[]
+  uploadedTracks    MusicTrack[]           @relation("TrackUploader")
+  passwordResets    PasswordReset[]
+  emailVerifications EmailVerification[]
+  createdInvitations Invitation[]          @relation("InvitationCreator")
+  preferences       UserPreference?
+  auditEvents       AuditEvent[]
+  notifications     ExchangeNotification[]
+
+  @@index([email])
+}
+
+model FamilyGroup {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator      User               @relation("GroupCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  memberships  FamilyMembership[]
+  invitations  Invitation[]
+  exchanges    GiftExchange[]
+
+  @@index([createdById])
+}
+
+model FamilyMembership {
+  id            String     @id @default(uuid())
+  familyGroupId String
+  userId        String
+  role          FamilyRole @default(MEMBER)
+  joinedAt      DateTime   @default(now())
+
+  familyGroup FamilyGroup @relation(fields: [familyGroupId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([familyGroupId, userId])
+  @@index([familyGroupId])
+  @@index([userId])
+}
+
+model Invitation {
+  id            String           @id @default(uuid())
+  familyGroupId String
+  email         String
+  token         String           @unique
+  role          FamilyRole       @default(MEMBER)
+  status        InvitationStatus @default(PENDING)
+  expiresAt     DateTime
+  createdById   String
+  createdAt     DateTime         @default(now())
+
+  familyGroup FamilyGroup @relation(fields: [familyGroupId], references: [id], onDelete: Cascade)
+  creator     User        @relation("InvitationCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([familyGroupId])
+  @@index([token])
+  @@index([email])
+}
+
+model PasswordReset {
+  id        String    @id @default(uuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model EmailVerification {
+  id        String    @id @default(uuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model GiftExchange {
+  id                    String         @id @default(uuid())
+  familyGroupId         String
+  name                  String
+  year                  Int
+  budget                Decimal        @db.Decimal(10, 2)
+  currency              String         @default("USD")
+  exchangeDate          DateTime
+  drawDate              DateTime?
+  participationDeadline DateTime?
+  location              String?
+  instructions          String?
+  status                ExchangeStatus @default(DRAFT)
+  drawnAt               DateTime?
+  isPremium             Boolean        @default(false)
+  stripeSessionId       String?
+  stripeCustomerId      String?
+  createdById           String
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  familyGroup   FamilyGroup            @relation(fields: [familyGroupId], references: [id], onDelete: Cascade)
+  creator       User                   @relation("ExchangeCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  participants  ExchangeParticipant[]
+  exclusions    ExclusionRule[]
+  assignments   GiftAssignment[]
+  wishLists     WishList[]
+  giftProgress  GiftProgress[]
+  notifications ExchangeNotification[]
+
+  @@unique([familyGroupId, year])
+  @@index([familyGroupId])
+  @@index([status])
+}
+
+model ExchangeParticipant {
+  id          String            @id @default(uuid())
+  exchangeId  String
+  userId      String
+  status      ParticipantStatus @default(INVITED)
+  confirmedAt DateTime?
+  createdAt   DateTime          @default(now())
+
+  exchange GiftExchange @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([exchangeId, userId])
+  @@index([exchangeId])
+  @@index([userId])
+}
+
+model ExclusionRule {
+  id         String   @id @default(uuid())
+  exchangeId String
+  userAId    String
+  userBId    String
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  exchange GiftExchange @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+  userA    User         @relation("ExclusionA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB    User         @relation("ExclusionB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([exchangeId, userAId, userBId])
+  @@index([exchangeId])
+}
+
+model GiftAssignment {
+  id          String    @id @default(uuid())
+  exchangeId  String
+  giverId     String
+  recipientId String
+  drawnAt     DateTime  @default(now())
+  revealedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  exchange  GiftExchange @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+  giver     User         @relation("GiverAssignments", fields: [giverId], references: [id], onDelete: Cascade)
+  recipient User         @relation("RecipientAssignments", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([exchangeId, giverId])
+  @@unique([exchangeId, recipientId])
+  @@index([exchangeId])
+  @@index([giverId])
+  @@index([recipientId])
+}
+
+model WishList {
+  id             String   @id @default(uuid())
+  exchangeId     String
+  userId         String
+  notes          String?
+  favoriteColors String?
+  sizes          String?
+  interests      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  exchange GiftExchange   @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items    WishListItem[]
+
+  @@unique([exchangeId, userId])
+  @@index([exchangeId])
+  @@index([userId])
+}
+
+model WishListItem {
+  id          String   @id @default(uuid())
+  wishListId  String
+  title       String
+  description String?
+  url         String?
+  price       Decimal? @db.Decimal(10, 2)
+  priority    Priority @default(MEDIUM)
+  isPurchased Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  wishList WishList @relation(fields: [wishListId], references: [id], onDelete: Cascade)
+
+  @@index([wishListId])
+}
+
+model GiftProgress {
+  id         String         @id @default(uuid())
+  exchangeId String
+  giverId    String
+  status     ProgressStatus @default(PLANNING)
+  notes      String?
+  updatedAt  DateTime       @updatedAt
+
+  exchange GiftExchange @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+  giver    User         @relation(fields: [giverId], references: [id], onDelete: Cascade)
+
+  @@unique([exchangeId, giverId])
+  @@index([exchangeId])
+  @@index([giverId])
+}
+
+model ExchangeNotification {
+  id         String             @id @default(uuid())
+  exchangeId String
+  userId     String
+  type       String
+  status     NotificationStatus @default(PENDING)
+  error      String?
+  sentAt     DateTime?
+  createdAt  DateTime           @default(now())
+
+  exchange GiftExchange @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([exchangeId])
+  @@index([userId])
+}
+
+model MusicTrack {
+  id           String        @id @default(uuid())
+  title        String
+  artist       String?
+  category     MusicCategory @default(FESTIVE)
+  source       MusicSource   @default(BUILTIN)
+  filePath     String
+  mimeType     String?
+  duration     Int?
+  isActive     Boolean       @default(true)
+  sortOrder    Int           @default(0)
+  uploadedById String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  uploader User? @relation("TrackUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model UserPreference {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  musicEnabled        Boolean  @default(false)
+  musicVolume         Float    @default(0.5)
+  snowEnabled         Boolean  @default(true)
+  soundEffectsEnabled Boolean  @default(true)
+  reducedMotion       Boolean  @default(false)
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditEvent {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  details    String?  @db.Text
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
