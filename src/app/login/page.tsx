@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
 
@@ -42,17 +41,8 @@ export default function LoginPage() {
   return (
     <div className="max-w-md mx-auto my-8 sm:my-16 px-4">
       <div className="festive-card p-6 sm:p-8 rounded-2xl space-y-6">
-        <div className="text-center space-y-3">
-          <div className="relative w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-[#d4af37] shadow-xl shadow-[#d4af37]/25 bg-[#071d15]">
-            <Image
-              src="/images/santa-logo.png"
-              alt="The Santa Circle"
-              fill
-              sizes="80px"
-              className="object-cover"
-              priority
-            />
-          </div>
+        <div className="text-center space-y-2">
+          <div className="text-4xl">🎅</div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[#fef9ee] font-festive">Welcome Back</h1>
           <p className="text-sm text-slate-300">Sign in to The Santa Circle</p>
         </div>

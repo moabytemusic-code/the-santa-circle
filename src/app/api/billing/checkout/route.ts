@@ -63,7 +63,6 @@ export async function POST(req: Request) {
               name: `The Santa Circle - Host Pass (${exchange.name})`,
               description:
                 "Unlimited circle participants, automated reminder broadcasts, custom countdown reveal, and priority support.",
-              images: [`${appUrl}/images/santa-logo.png`],
             },
             unit_amount: 799, // $7.99 in cents
           },

@@ -2,7 +2,6 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, Mail, User, AlertCircle, Loader2, Sparkles, Users } from "lucide-react";
 
@@ -60,17 +59,8 @@ function RegisterForm() {
 
   return (
     <div className="festive-card p-6 sm:p-8 rounded-2xl space-y-6">
-      <div className="text-center space-y-3">
-        <div className="relative w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-[#d4af37] shadow-xl shadow-[#d4af37]/25 bg-[#071d15]">
-          <Image
-            src="/images/santa-logo.png"
-            alt="The Santa Circle"
-            fill
-            sizes="80px"
-            className="object-cover"
-            priority
-          />
-        </div>
+      <div className="text-center space-y-2">
+        <div className="text-4xl">🎅</div>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#fef9ee] font-festive">The Santa Circle</h1>
         <p className="text-sm text-slate-300">
           {inviteToken
