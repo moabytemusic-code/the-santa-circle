@@ -415,7 +415,7 @@ export default function SuperAdminPage() {
               <span>Back to Dashboard</span>
             </Link>
             <Link
-              href="/login"
+              href="/login?redirect=/super-admin"
               className="px-5 py-2.5 rounded-xl bg-[#d4af37] hover:bg-[#b89528] text-[#0b2b20] font-bold transition text-sm"
             >
               Log in with Admin Account

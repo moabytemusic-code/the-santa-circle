@@ -29,7 +29,16 @@ export default function LoginPage() {
         throw new Error(data.error || "Login failed");
       }
 
-      router.push("/dashboard");
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectParam = searchParams.get("redirect");
+
+      if (redirectParam) {
+        router.push(redirectParam);
+      } else if (data.user?.role === "ADMIN") {
+        router.push("/super-admin");
+      } else {
+        router.push("/dashboard");
+      }
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred");
