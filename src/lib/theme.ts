@@ -105,8 +105,20 @@ export const CULTURAL_THEME_PRESETS: Record<CulturalThemeId, CulturalTheme> = {
  */
 export function getThemeById(id?: string | null): CulturalTheme {
   if (!id) return CULTURAL_THEME_PRESETS.CLASSIC;
-  const upper = id.toUpperCase().replace("-", "_") as CulturalThemeId;
-  return CULTURAL_THEME_PRESETS[upper] || CULTURAL_THEME_PRESETS.CLASSIC;
+  const upper = id.toUpperCase().replace(/-/g, "_") as string;
+  if (upper === "WINTER_GLOW" || upper === "WINTER" || upper === "INCLUSIVE" || upper === "MULTICULTURAL") {
+    return CULTURAL_THEME_PRESETS.MULTICULTURAL;
+  }
+  if (upper === "BLACK_SANTA" || upper === "BLACKSANTA" || upper === "AFRICAN_AMERICAN") {
+    return CULTURAL_THEME_PRESETS.BLACK_SANTA;
+  }
+  if (upper === "NAVIDAD" || upper === "HISPANIC" || upper === "LATINO" || upper === "REYES_MAGOS") {
+    return CULTURAL_THEME_PRESETS.NAVIDAD;
+  }
+  if (upper in CULTURAL_THEME_PRESETS) {
+    return CULTURAL_THEME_PRESETS[upper as CulturalThemeId];
+  }
+  return CULTURAL_THEME_PRESETS.CLASSIC;
 }
 
 /**
