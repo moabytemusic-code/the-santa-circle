@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Gift, Sparkles, User, Shield, LogOut, Menu, X, Heart, Crown } from "lucide-react";
+import { Gift, Sparkles, User, Shield, LogOut, Menu, X, Heart, Crown, Tag } from "lucide-react";
 import { Role } from "@prisma/client";
 
 interface NavbarProps {
@@ -34,6 +34,7 @@ export function Navbar({ user }: NavbarProps) {
     { href: "/dashboard", label: "Circle Dashboard", icon: Gift },
     { href: "/reveal", label: "My Secret Santa", icon: Sparkles },
     { href: "/wishlist", label: "My Wish List", icon: Heart },
+    { href: "/gift-guides", label: "Gift Guides", icon: Tag },
   ];
 
   if (user?.role === "ADMIN") {
@@ -100,6 +101,13 @@ export function Navbar({ user }: NavbarProps) {
             </nav>
           ) : (
             <div className="hidden md:flex items-center space-x-3">
+              <Link
+                href="/gift-guides"
+                className="px-3 py-2 text-sm text-[#f3c053] hover:text-[#d4af37] font-semibold transition flex items-center space-x-1.5"
+              >
+                <span>🎁</span>
+                <span>Gift Guides</span>
+              </Link>
               <Link
                 href="/login"
                 className="px-4 py-2 text-sm text-[#fef9ee] hover:text-[#d4af37] font-medium transition"
@@ -169,6 +177,13 @@ export function Navbar({ user }: NavbarProps) {
             </>
           ) : (
             <div className="space-y-2 pt-2">
+              <Link
+                href="/gift-guides"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block w-full text-center px-4 py-2.5 rounded-lg bg-[#0b2b20] border border-[#d4af37]/40 text-[#f3c053] font-semibold"
+              >
+                🎁 Browse Holiday Gift Guides
+              </Link>
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}

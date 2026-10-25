@@ -9,11 +9,19 @@ export async function GET() {
   }
 
   try {
+    let totalLeads = 0;
+    try {
+      totalLeads = await prisma.leadSubscriber.count();
+    } catch {
+      // Table might be initializing
+    }
+
     const [
       totalUsers,
       totalCircles,
       totalExchanges,
       totalPaidPasses,
+      totalInvitations,
       recentUsers,
       recentCirclesRaw,
     ] = await Promise.all([
@@ -21,6 +29,7 @@ export async function GET() {
       prisma.familyGroup.count(),
       prisma.giftExchange.count(),
       prisma.giftExchange.count({ where: { isPremium: true } }),
+      prisma.invitation.count(),
       prisma.user.findMany({
         take: 8,
         orderBy: { createdAt: "desc" },
@@ -65,6 +74,9 @@ export async function GET() {
         totalCircles,
         totalExchanges,
         totalPaidPasses,
+        totalInvitations,
+        totalLeads,
+        totalMarketableContacts: totalUsers + totalInvitations + totalLeads,
         totalRevenue: Number((totalPaidPasses * 7.99).toFixed(2)),
       },
       recentUsers,

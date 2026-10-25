@@ -281,6 +281,14 @@ export default function RevealPage() {
                 <Heart className="w-4 h-4" />
                 <span>View {data.recipient.name}&apos;s Wish List</span>
               </a>
+
+              <Link
+                href="/gift-guides"
+                className="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-[#144534] hover:bg-[#1d5943] text-[#d4af37] border border-[#d4af37]/60 font-bold text-sm transition shadow-lg"
+              >
+                <span>🎁</span>
+                <span>Need Ideas under ${Number(data.exchange.budget || 25).toFixed(0)}?</span>
+              </Link>
             </div>
           </div>
 
@@ -421,7 +429,7 @@ export default function RevealPage() {
                         </a>
                       ) : (
                         <a
-                          href={`https://www.amazon.com/s?k=${encodeURIComponent(item.title)}&tag=santa101-20`}
+                          href={`https://www.amazon.com/s?k=${encodeURIComponent(item.title)}&tag=thesantaci0b-20`}
                           target="_blank"
                           rel="noopener noreferrer sponsored"
                           className="px-3.5 py-1.5 rounded-lg bg-[#144534]/80 hover:bg-[#1d5943] border border-amber-500/30 text-xs text-amber-300 font-medium transition shrink-0 flex items-center space-x-1"
@@ -434,10 +442,35 @@ export default function RevealPage() {
                   ))}
                 </div>
               ) : (
-                <div className="p-6 text-center rounded-xl bg-[#0b2b20]/40 border border-[#1d5943] text-xs text-slate-400">
-                  {data.recipient.name} has not added any specific gift items yet. Check back soon or surprise them based on their favorite colors and interests!
+                <div className="p-6 text-center rounded-xl bg-[#0b2b20]/40 border border-[#1d5943] text-xs text-slate-400 space-y-3">
+                  <p>{data.recipient.name} has not added any specific gift items yet. Check back soon or surprise them based on their favorite colors and interests!</p>
+                  <Link
+                    href="/gift-guides"
+                    className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#d4af37] text-[#0b2b20] font-bold text-xs hover:bg-[#f3c053] transition"
+                  >
+                    <span>🎁 Explore Top Gifts Under ${Number(data.exchange.budget || 25).toFixed(0)}</span>
+                  </Link>
                 </div>
               )}
+            </div>
+
+            {/* Inspiration Banner */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-[#144534] to-[#0b2b20] border border-[#d4af37]/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-sm text-[#fef9ee] flex items-center space-x-2">
+                  <span>✨</span>
+                  <span>Looking for more inspiration?</span>
+                </h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Browse our curated 2026 holiday collections for budget steals, viral White Elephant picks, and cultural treasures.
+                </p>
+              </div>
+              <Link
+                href="/gift-guides"
+                className="px-4 py-2 rounded-xl bg-[#d4af37] text-[#0b2b20] font-bold text-xs hover:bg-[#f3c053] transition whitespace-nowrap"
+              >
+                Browse All Gift Guides →
+              </Link>
             </div>
           </div>
         </div>

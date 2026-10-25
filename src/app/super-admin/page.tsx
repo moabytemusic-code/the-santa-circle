@@ -27,6 +27,7 @@ import {
   Palette,
   Globe,
   Copy,
+  Download,
 } from "lucide-react";
 
 interface OverviewStats {
@@ -35,6 +36,9 @@ interface OverviewStats {
   totalExchanges: number;
   totalPaidPasses: number;
   totalRevenue: number;
+  totalInvitations?: number;
+  totalLeads?: number;
+  totalMarketableContacts?: number;
 }
 
 interface CircleItem {
@@ -70,7 +74,7 @@ interface UserItem {
 }
 
 export default function SuperAdminPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "circles" | "users" | "branding">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "circles" | "users" | "branding" | "marketing">("overview");
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -591,6 +595,18 @@ export default function SuperAdminPage() {
         >
           <Palette className="w-4 h-4 text-[#d4af37]" />
           <span>Culture & Branding Studio</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("marketing")}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+            activeTab === "marketing"
+              ? "bg-[#1d5943] text-[#d4af37] border border-[#d4af37]/40 shadow-sm"
+              : "text-slate-300 hover:text-[#fef9ee] hover:bg-[#144534]"
+          }`}
+        >
+          <Mail className="w-4 h-4 text-[#d4af37]" />
+          <span>Marketing & Leads</span>
         </button>
       </div>
 
@@ -1366,6 +1382,267 @@ export default function SuperAdminPage() {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: MARKETING & EMAIL LEADS HUB */}
+      {activeTab === "marketing" && (
+        <div className="space-y-8">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-[#144534] via-[#1a5641] to-[#0f382a] border border-[#d4af37]/40 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#d4af37]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 max-w-3xl">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#f3c053] text-xs font-bold uppercase tracking-wider mb-3">
+                <Mail className="w-3.5 h-3.5" />
+                <span>Audience &amp; Promotional Data</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold font-festive text-[#fef9ee] mb-2">
+                Marketing, Email Leads &amp; CSV Export
+              </h2>
+              <p className="text-slate-200 text-sm leading-relaxed mb-4">
+                Export and segment your high-intent holiday shopper emails for promotional campaigns, Amazon gift drops, Brevo newsletters, and TikTok, Pinterest, or Meta lookalike audience targeting.
+              </p>
+              <div className="flex flex-wrap items-center gap-3 text-xs">
+                <div className="px-3 py-1.5 rounded-lg bg-[#0b2b20]/80 border border-[#1d5943] text-slate-300">
+                  Total Marketable Pool:{" "}
+                  <span className="font-bold text-[#d4af37]">
+                    {stats?.totalMarketableContacts ?? (stats?.totalUsers || 0) + (stats?.totalInvitations || 0)} Contacts
+                  </span>
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-[#0b2b20]/80 border border-[#1d5943] text-slate-300">
+                  Export Format:{" "}
+                  <span className="font-bold text-[#fef9ee]">Standard UTF-8 CSV</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-[#144534]/70 border border-[#1d5943] rounded-2xl p-4 shadow-lg">
+              <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 block mb-1">
+                Registered Users
+              </span>
+              <div className="text-2xl font-bold text-[#fef9ee]">{stats?.totalUsers || 0}</div>
+              <span className="text-[11px] text-[#f3c053] mt-0.5 block">Account Organizers</span>
+            </div>
+
+            <div className="bg-[#144534]/70 border border-[#1d5943] rounded-2xl p-4 shadow-lg">
+              <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 block mb-1">
+                Invited Guests
+              </span>
+              <div className="text-2xl font-bold text-[#fef9ee]">{stats?.totalInvitations || 0}</div>
+              <span className="text-[11px] text-slate-400 mt-0.5 block">High-Intent Gifters</span>
+            </div>
+
+            <div className="bg-[#144534]/70 border border-[#1d5943] rounded-2xl p-4 shadow-lg">
+              <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 block mb-1">
+                Lead Magnet Subscriptions
+              </span>
+              <div className="text-2xl font-bold text-[#fef9ee]">{stats?.totalLeads || 0}</div>
+              <span className="text-[11px] text-slate-400 mt-0.5 block">Toolkit Downloads</span>
+            </div>
+
+            <div className="bg-[#144534]/70 border border-[#d4af37]/40 rounded-2xl p-4 shadow-lg bg-[#0b2b20]/50">
+              <span className="text-[11px] uppercase tracking-wider font-semibold text-[#f3c053] block mb-1">
+                Total Marketable Leads
+              </span>
+              <div className="text-2xl font-bold text-[#d4af37]">
+                {stats?.totalMarketableContacts ?? (stats?.totalUsers || 0) + (stats?.totalInvitations || 0)}
+              </div>
+              <span className="text-[11px] text-emerald-400 mt-0.5 block">Ready for Retargeting</span>
+            </div>
+          </div>
+
+          {/* 1-Click CSV Downloads Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Card 1: Master Deduplicated List */}
+            <div className="bg-[#144534]/70 border-2 border-[#d4af37]/60 rounded-2xl p-6 shadow-xl relative flex flex-col justify-between">
+              <div>
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2.5 rounded-xl bg-[#d4af37]/20 text-[#d4af37]">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold font-festive text-lg text-[#fef9ee]">
+                      Master Deduplicated Leads (All Sources)
+                    </h3>
+                    <span className="text-[11px] text-[#f3c053] font-semibold">Recommended for Ad Audiences &amp; Newsletters</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                  Extracts every unique email across registered organizers, invited guests, and toolkit subscribers into one consolidated CSV file. Guaranteed no duplicates.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#1d5943] flex items-center justify-between">
+                <span className="text-xs text-slate-400">Includes Name, Source &amp; Culture</span>
+                <a
+                  href="/api/super-admin/export?type=master"
+                  download
+                  className="px-4 py-2 rounded-xl bg-[#d4af37] hover:bg-[#b89528] text-[#0b2b20] font-bold text-xs transition flex items-center space-x-2 shadow-lg"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download Master CSV</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Card 2: Registered Platform Users */}
+            <div className="bg-[#144534]/70 border border-[#1d5943] rounded-2xl p-6 shadow-xl relative flex flex-col justify-between">
+              <div>
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2.5 rounded-xl bg-blue-500/20 text-blue-400">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold font-festive text-lg text-[#fef9ee]">
+                      Registered Organizers &amp; Members
+                    </h3>
+                    <span className="text-[11px] text-slate-400">Account holders with active circles</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                  Exports registered users with their full name, email address, role, number of circles hosted, number of circles joined, and account creation date.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#1d5943] flex items-center justify-between">
+                <span className="text-xs text-slate-400">{stats?.totalUsers || 0} Account Holders</span>
+                <a
+                  href="/api/super-admin/export?type=users"
+                  download
+                  className="px-4 py-2 rounded-xl bg-[#1d5943] hover:bg-[#256f54] text-[#fef9ee] font-semibold text-xs transition flex items-center space-x-2"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download Users CSV</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Card 3: Invited Circle Guests */}
+            <div className="bg-[#144534]/70 border border-[#1d5943] rounded-2xl p-6 shadow-xl relative flex flex-col justify-between">
+              <div>
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
+                    <Gift className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold font-festive text-lg text-[#fef9ee]">
+                      Invited Circle Guests
+                    </h3>
+                    <span className="text-[11px] text-slate-400">High-intent gifters invited to family/team exchanges</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                  Exports all friends, coworkers, and family members invited to gift exchanges, including their circle name, who invited them, invitation status, and expiration date.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#1d5943] flex items-center justify-between">
+                <span className="text-xs text-slate-400">{stats?.totalInvitations || 0} Invited Guests</span>
+                <a
+                  href="/api/super-admin/export?type=invitations"
+                  download
+                  className="px-4 py-2 rounded-xl bg-[#1d5943] hover:bg-[#256f54] text-[#fef9ee] font-semibold text-xs transition flex items-center space-x-2"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download Guests CSV</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Card 4: Lead Magnet Subscribers */}
+            <div className="bg-[#144534]/70 border border-[#1d5943] rounded-2xl p-6 shadow-xl relative flex flex-col justify-between">
+              <div>
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-400">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold font-festive text-lg text-[#fef9ee]">
+                      Holiday Guide Subscribers
+                    </h3>
+                    <span className="text-[11px] text-slate-400">Visitors who requested the free toolkit &amp; gift guide</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                  Exports visitors who opted in via the homepage lead magnet bar to receive the free Secret Santa Host Checklist &amp; 2026 Gift Guide.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#1d5943] flex items-center justify-between">
+                <span className="text-xs text-slate-400">{stats?.totalLeads || 0} Newsletter Leads</span>
+                <a
+                  href="/api/super-admin/export?type=leads"
+                  download
+                  className="px-4 py-2 rounded-xl bg-[#1d5943] hover:bg-[#256f54] text-[#fef9ee] font-semibold text-xs transition flex items-center space-x-2"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download Leads CSV</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Cultural Segmentation Exporter */}
+          <div className="bg-[#144534]/70 border border-[#1d5943] rounded-2xl p-6 shadow-xl">
+            <h3 className="font-bold font-festive text-lg text-[#fef9ee] mb-1">
+              Targeted Cultural Segment Exports
+            </h3>
+            <p className="text-xs text-slate-300 mb-4">
+              Export filtered lead lists segmented by cultural and ethnic affinity for hyper-targeted social ad campaigns and themed product recommendations.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <a
+                href="/api/super-admin/export?type=master&theme=BLACK_SANTA"
+                download
+                className="p-3 rounded-xl bg-[#0b2b20] border border-amber-500/40 hover:border-amber-400 transition flex items-center justify-between text-xs"
+              >
+                <div>
+                  <span className="font-bold text-amber-300 block">🎅🏿 Black Santa Audience</span>
+                  <span className="text-[10px] text-slate-400">Heritage campaigns</span>
+                </div>
+                <Download className="w-4 h-4 text-amber-400 shrink-0" />
+              </a>
+
+              <a
+                href="/api/super-admin/export?type=master&theme=NAVIDAD"
+                download
+                className="p-3 rounded-xl bg-[#0b2b20] border border-emerald-500/40 hover:border-emerald-400 transition flex items-center justify-between text-xs"
+              >
+                <div>
+                  <span className="font-bold text-emerald-300 block">🎅🏽 Navidad / Hispanic</span>
+                  <span className="text-[10px] text-slate-400">Amigo Secreto campaigns</span>
+                </div>
+                <Download className="w-4 h-4 text-emerald-400 shrink-0" />
+              </a>
+
+              <a
+                href="/api/super-admin/export?type=master&theme=MULTICULTURAL"
+                download
+                className="p-3 rounded-xl bg-[#0b2b20] border border-cyan-500/40 hover:border-cyan-400 transition flex items-center justify-between text-xs"
+              >
+                <div>
+                  <span className="font-bold text-cyan-300 block">❄️ Winter Glow Audience</span>
+                  <span className="text-[10px] text-slate-400">Workplace &amp; team drops</span>
+                </div>
+                <Download className="w-4 h-4 text-cyan-400 shrink-0" />
+              </a>
+
+              <a
+                href="/api/super-admin/export?type=master&theme=CLASSIC"
+                download
+                className="p-3 rounded-xl bg-[#0b2b20] border border-red-500/40 hover:border-red-400 transition flex items-center justify-between text-xs"
+              >
+                <div>
+                  <span className="font-bold text-red-300 block">🎅 Classic Festive</span>
+                  <span className="text-[10px] text-slate-400">Traditional exchanges</span>
+                </div>
+                <Download className="w-4 h-4 text-red-400 shrink-0" />
+              </a>
             </div>
           </div>
         </div>

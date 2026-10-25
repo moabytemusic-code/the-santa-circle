@@ -250,3 +250,17 @@ CREATE TABLE IF NOT EXISTS "PlatformSetting" (
     "value" TEXT NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Idempotent upgrades for Marketing & Lead Subscribers
+CREATE TABLE IF NOT EXISTS "LeadSubscriber" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "email" TEXT NOT NULL UNIQUE,
+    "name" TEXT,
+    "source" TEXT NOT NULL DEFAULT 'HOMEPAGE_LEAD_MAGNET',
+    "culturalTheme" TEXT NOT NULL DEFAULT 'CLASSIC',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS "LeadSubscriber_email_idx" ON "LeadSubscriber"("email");
+CREATE INDEX IF NOT EXISTS "LeadSubscriber_source_idx" ON "LeadSubscriber"("source");
+CREATE INDEX IF NOT EXISTS "LeadSubscriber_culturalTheme_idx" ON "LeadSubscriber"("culturalTheme");

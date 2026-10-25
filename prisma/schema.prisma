@@ -399,3 +399,17 @@ model PlatformSetting {
   value     String   @db.Text
   updatedAt DateTime @updatedAt
 }
+
+model LeadSubscriber {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String?
+  source        String   @default("HOMEPAGE_LEAD_MAGNET")
+  culturalTheme String   @default("CLASSIC")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([email])
+  @@index([source])
+  @@index([culturalTheme])
+}

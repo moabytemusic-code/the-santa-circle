@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
 import { getActiveThemeServer } from "@/lib/theme";
+import { LeadCaptureBar } from "@/components/LeadCaptureBar";
 import {
   Gift,
   ShieldCheck,
@@ -267,6 +268,9 @@ export default async function HomePage({
           </div>
         </div>
       </section>
+
+      {/* Free Lead Magnet Capture Bar */}
+      <LeadCaptureBar culturalTheme={currentTheme.id} />
 
       {/* Atmosphere Banner */}
       <section className="festive-card p-8 rounded-2xl bg-gradient-to-r from-[#144534] via-[#0b2b20] to-[#144534] border border-[#d4af37]/30 flex flex-col md:flex-row items-center justify-between gap-6">
