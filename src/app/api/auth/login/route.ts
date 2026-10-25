@@ -31,6 +31,7 @@ export async function POST(req: Request) {
       process.env.SUPER_ADMIN_EMAIL?.toLowerCase().trim(),
       "kentjigga@gmail.com",
       "admin@thesantacircle.com",
+      "admin@family.com",
     ].filter(Boolean);
 
     if (adminEmails.includes(cleanEmail) && userRole !== "ADMIN") {

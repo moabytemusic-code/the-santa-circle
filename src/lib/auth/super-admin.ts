@@ -5,6 +5,7 @@ import { Role } from "@prisma/client";
 const DEFAULT_SUPER_ADMINS = [
   "kentjigga@gmail.com",
   "admin@thesantacircle.com",
+  "admin@family.com",
 ];
 
 export function getSuperAdminEmails(): string[] {
