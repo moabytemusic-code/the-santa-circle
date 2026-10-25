@@ -264,3 +264,19 @@ CREATE TABLE IF NOT EXISTS "LeadSubscriber" (
 CREATE INDEX IF NOT EXISTS "LeadSubscriber_email_idx" ON "LeadSubscriber"("email");
 CREATE INDEX IF NOT EXISTS "LeadSubscriber_source_idx" ON "LeadSubscriber"("source");
 CREATE INDEX IF NOT EXISTS "LeadSubscriber_culturalTheme_idx" ON "LeadSubscriber"("culturalTheme");
+
+-- Idempotent upgrades for Digital Products & Orders
+CREATE TABLE IF NOT EXISTS "DigitalOrder" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "stripeSessionId" TEXT NOT NULL UNIQUE,
+    "customerEmail" TEXT NOT NULL,
+    "productName" TEXT NOT NULL,
+    "amountCents" INTEGER NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'usd',
+    "status" TEXT NOT NULL DEFAULT 'COMPLETED',
+    "downloadToken" TEXT NOT NULL UNIQUE,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS "DigitalOrder_customerEmail_idx" ON "DigitalOrder"("customerEmail");
+CREATE INDEX IF NOT EXISTS "DigitalOrder_stripeSessionId_idx" ON "DigitalOrder"("stripeSessionId");
+CREATE INDEX IF NOT EXISTS "DigitalOrder_downloadToken_idx" ON "DigitalOrder"("downloadToken");

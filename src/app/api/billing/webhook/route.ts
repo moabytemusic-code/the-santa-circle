@@ -30,9 +30,11 @@ export async function POST(req: Request) {
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+      const productType = session.metadata?.productType;
       const exchangeId = session.metadata?.exchangeId || session.client_reference_id;
 
-      if (exchangeId) {
+      // 1. Host Pass Upgrade
+      if (exchangeId && productType !== "digital_goods") {
         await prisma.giftExchange.update({
           where: { id: exchangeId },
           data: {
@@ -42,6 +44,43 @@ export async function POST(req: Request) {
           },
         });
         console.info(`[Stripe Webhook] Successfully upgraded exchange ${exchangeId} to Host Pass!`);
+      }
+
+      // 2. Digital Product Purchase (Party Games Bundle)
+      if (productType === "digital_goods" || session.metadata?.productId === "holiday_games_bundle_2026") {
+        const customerEmail = session.customer_details?.email || session.customer_email || "guest@thesantacircle.com";
+        const customerName = session.customer_details?.name || null;
+
+        await prisma.digitalOrder.upsert({
+          where: { stripeSessionId: session.id },
+          update: { status: "COMPLETED" },
+          create: {
+            stripeSessionId: session.id,
+            customerEmail: customerEmail.toLowerCase().trim(),
+            productName: "The Ultimate Holiday Party Games & Icebreaker Pack",
+            amountCents: session.amount_total || 799,
+            currency: session.currency || "usd",
+            status: "COMPLETED",
+          },
+        });
+
+        // Add to leads list automatically
+        try {
+          await prisma.leadSubscriber.upsert({
+            where: { email: customerEmail.toLowerCase().trim() },
+            update: { source: "DIGITAL_GAMES_CUSTOMER" },
+            create: {
+              email: customerEmail.toLowerCase().trim(),
+              name: customerName,
+              source: "DIGITAL_GAMES_CUSTOMER",
+              culturalTheme: "CLASSIC",
+            },
+          });
+        } catch {
+          // ignore duplicate
+        }
+
+        console.info(`[Stripe Webhook] Successfully recorded digital order for ${customerEmail}!`);
       }
     }
 

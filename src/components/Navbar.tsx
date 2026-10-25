@@ -35,6 +35,7 @@ export function Navbar({ user }: NavbarProps) {
     { href: "/reveal", label: "My Secret Santa", icon: Sparkles },
     { href: "/wishlist", label: "My Wish List", icon: Heart },
     { href: "/gift-guides", label: "Gift Guides", icon: Tag },
+    { href: "/games-bundle", label: "Party Games", icon: Sparkles },
   ];
 
   if (user?.role === "ADMIN") {
@@ -107,6 +108,13 @@ export function Navbar({ user }: NavbarProps) {
               >
                 <span>🎁</span>
                 <span>Gift Guides</span>
+              </Link>
+              <Link
+                href="/games-bundle"
+                className="px-3 py-2 text-sm text-[#fef9ee] hover:text-[#d4af37] font-medium transition flex items-center space-x-1.5"
+              >
+                <span>🎲</span>
+                <span>Party Games</span>
               </Link>
               <Link
                 href="/login"

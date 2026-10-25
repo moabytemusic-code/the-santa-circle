@@ -413,3 +413,19 @@ model LeadSubscriber {
   @@index([source])
   @@index([culturalTheme])
 }
+
+model DigitalOrder {
+  id              String   @id @default(uuid())
+  stripeSessionId String   @unique
+  customerEmail   String
+  productName     String
+  amountCents     Int
+  currency        String   @default("usd")
+  status          String   @default("COMPLETED")
+  downloadToken   String   @unique @default(uuid())
+  createdAt       DateTime @default(now())
+
+  @@index([customerEmail])
+  @@index([stripeSessionId])
+  @@index([downloadToken])
+}
