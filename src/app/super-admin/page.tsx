@@ -24,6 +24,9 @@ import {
   Check,
   X,
   ExternalLink,
+  Palette,
+  Globe,
+  Copy,
 } from "lucide-react";
 
 interface OverviewStats {
@@ -38,6 +41,7 @@ interface CircleItem {
   id: string;
   name: string;
   description?: string;
+  culturalTheme?: string;
   createdAt: string;
   creator: { id: string; name: string; email: string };
   membersCount: number;
@@ -45,6 +49,7 @@ interface CircleItem {
   exchangeId?: string;
   exchangeYear: number;
   exchangeStatus: string;
+  budget?: number;
   budgetLimit?: number;
   isPremium: boolean;
   participantsCount: number;
@@ -65,10 +70,16 @@ interface UserItem {
 }
 
 export default function SuperAdminPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "circles" | "users">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "circles" | "users" | "branding">("overview");
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Cultural Themes & Branding State
+  const [activeThemeId, setActiveThemeId] = useState<string>("CLASSIC");
+  const [themePresets, setThemePresets] = useState<Record<string, any>>({});
+  const [savingTheme, setSavingTheme] = useState(false);
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
   // Stats & Data
   const [stats, setStats] = useState<OverviewStats | null>(null);
@@ -84,6 +95,7 @@ export default function SuperAdminPage() {
   // Modals & Action States
   const [editingCircle, setEditingCircle] = useState<CircleItem | null>(null);
   const [editCircleName, setEditCircleName] = useState("");
+  const [editCircleTheme, setEditCircleTheme] = useState("CLASSIC");
   const [deletingCircle, setDeletingCircle] = useState<CircleItem | null>(null);
 
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
@@ -102,13 +114,14 @@ export default function SuperAdminPage() {
   const loadAllData = async () => {
     setRefreshing(true);
     try {
-      const [overviewRes, circlesRes, usersRes] = await Promise.all([
+      const [overviewRes, circlesRes, usersRes, themeRes] = await Promise.all([
         fetch("/api/super-admin/overview"),
         fetch("/api/super-admin/circles"),
         fetch("/api/super-admin/users"),
+        fetch("/api/super-admin/theme"),
       ]);
 
-      if (overviewRes.status === 403 || circlesRes.status === 403 || usersRes.status === 403) {
+      if (overviewRes.status === 403 || circlesRes.status === 403 || usersRes.status === 403 || themeRes.status === 403) {
         setUnauthorized(true);
         setLoading(false);
         setRefreshing(false);
@@ -130,6 +143,12 @@ export default function SuperAdminPage() {
       if (usersRes.ok) {
         const data = await usersRes.json();
         setUsers(data.users || []);
+      }
+
+      if (themeRes.ok) {
+        const data = await themeRes.json();
+        if (data.activeThemeId) setActiveThemeId(data.activeThemeId);
+        if (data.presets) setThemePresets(data.presets);
       }
     } catch (err) {
       console.error(err);
@@ -198,19 +217,82 @@ export default function SuperAdminPage() {
       const res = await fetch(`/api/super-admin/circles/${editingCircle.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editCircleName.trim() }),
+        body: JSON.stringify({
+          name: editCircleName.trim(),
+          culturalTheme: editCircleTheme,
+        }),
       });
-      if (!res.ok) throw new Error("Failed to update name");
+      if (!res.ok) throw new Error("Failed to update circle");
 
       setCircles((prev) =>
-        prev.map((c) => (c.id === editingCircle.id ? { ...c, name: editCircleName.trim() } : c))
+        prev.map((c) =>
+          c.id === editingCircle.id
+            ? { ...c, name: editCircleName.trim(), culturalTheme: editCircleTheme }
+            : c
+        )
       );
-      showToast(`Circle renamed to "${editCircleName.trim()}".`);
+      showToast(`Circle "${editCircleName.trim()}" updated successfully.`);
       setEditingCircle(null);
     } catch {
-      showToast("Error renaming circle.", "error");
+      showToast("Error updating circle.", "error");
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleActivateTheme = async (themeId: string) => {
+    setSavingTheme(true);
+    try {
+      const res = await fetch("/api/super-admin/theme", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activeThemeId: themeId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to activate theme");
+
+      setActiveThemeId(themeId);
+      showToast(`Platform theme activated: ${themePresets[themeId]?.name || themeId} ✨`);
+    } catch (err: any) {
+      showToast(err.message || "Failed to update theme", "error");
+    } finally {
+      setSavingTheme(false);
+    }
+  };
+
+  const handleCopyLink = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedLink(url);
+    showToast("Campaign URL copied to clipboard! 📋");
+    setTimeout(() => setCopiedLink(null), 3000);
+  };
+
+  const getThemeBadge = (themeKey?: string) => {
+    switch (themeKey) {
+      case "BLACK_SANTA":
+        return {
+          label: "Black Santa",
+          icon: "🎅🏿",
+          classes: "bg-amber-950/40 text-amber-300 border-amber-500/40",
+        };
+      case "NAVIDAD":
+        return {
+          label: "Navidad",
+          icon: "🎅🏽",
+          classes: "bg-emerald-950/40 text-emerald-300 border-emerald-500/40",
+        };
+      case "MULTICULTURAL":
+        return {
+          label: "Winter Glow",
+          icon: "❄️",
+          classes: "bg-cyan-950/40 text-cyan-300 border-cyan-500/40",
+        };
+      default:
+        return {
+          label: "Classic Festive",
+          icon: "🎅",
+          classes: "bg-red-950/40 text-red-300 border-red-500/40",
+        };
     }
   };
 
@@ -498,6 +580,18 @@ export default function SuperAdminPage() {
           <Users className="w-4 h-4 text-[#d4af37]" />
           <span>Users ({users.length})</span>
         </button>
+
+        <button
+          onClick={() => setActiveTab("branding")}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+            activeTab === "branding"
+              ? "bg-[#1d5943] text-[#d4af37] border border-[#d4af37]/40 shadow-sm"
+              : "text-slate-300 hover:text-[#fef9ee] hover:bg-[#144534]"
+          }`}
+        >
+          <Palette className="w-4 h-4 text-[#d4af37]" />
+          <span>Culture & Branding Studio</span>
+        </button>
       </div>
 
       {/* TAB 1: OVERVIEW */}
@@ -618,6 +712,7 @@ export default function SuperAdminPage() {
                 <tr>
                   <th className="py-3 px-4">Circle Name</th>
                   <th className="py-3 px-4">Host</th>
+                  <th className="py-3 px-4 text-center">Theme / Culture</th>
                   <th className="py-3 px-4 text-center">Members</th>
                   <th className="py-3 px-4 text-center">Exchange Status</th>
                   <th className="py-3 px-4 text-center">Host Pass</th>
@@ -627,7 +722,7 @@ export default function SuperAdminPage() {
               <tbody className="divide-y divide-[#1d5943]/60">
                 {filteredCircles.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-400">
+                    <td colSpan={7} className="py-8 text-center text-slate-400">
                       No matching circles found.
                     </td>
                   </tr>
@@ -643,6 +738,19 @@ export default function SuperAdminPage() {
                       <td className="py-3.5 px-4">
                         <div className="font-medium text-slate-200">{circle.creator?.name || "Unknown"}</div>
                         <div className="text-xs text-slate-400">{circle.creator?.email}</div>
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        {(() => {
+                          const badge = getThemeBadge(circle.culturalTheme);
+                          return (
+                            <span
+                              className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${badge.classes}`}
+                            >
+                              <span>{badge.icon}</span>
+                              <span>{badge.label}</span>
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="py-3.5 px-4 text-center font-medium">
                         {circle.membersCount}
@@ -680,9 +788,10 @@ export default function SuperAdminPage() {
                             onClick={() => {
                               setEditingCircle(circle);
                               setEditCircleName(circle.name);
+                              setEditCircleTheme(circle.culturalTheme || "CLASSIC");
                             }}
                             className="p-1.5 text-slate-400 hover:text-[#d4af37] hover:bg-[#0b2b20] rounded-lg transition"
-                            title="Edit circle name"
+                            title="Edit circle"
                           >
                             <Edit3 className="w-4 h-4" />
                           </button>
@@ -806,21 +915,498 @@ export default function SuperAdminPage() {
         </div>
       )}
 
+      {/* TAB 4: CULTURE & ETHNIC BRANDING STUDIO */}
+      {activeTab === "branding" && (
+        <div className="space-y-8">
+          {/* Studio Banner */}
+          <div className="bg-gradient-to-r from-[#144534] via-[#1a5641] to-[#0f382a] border border-[#d4af37]/40 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#d4af37]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="max-w-3xl">
+                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#f3c053] text-xs font-bold uppercase tracking-wider mb-3">
+                  <Palette className="w-3.5 h-3.5" />
+                  <span>Cultural Identity & Dynamic Rebranding</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold font-festive text-[#fef9ee] mb-2">
+                  Culture & Rebranding Studio
+                </h2>
+                <p className="text-slate-200 text-sm leading-relaxed mb-4">
+                  Rebrand the platform for specific ethnic & cultural demographics. You can set a{" "}
+                  <span className="font-semibold text-[#f3c053]">Global Platform Default</span>, or generate{" "}
+                  <span className="font-semibold text-[#f3c053]">Targeted Campaign URLs</span> for your Facebook, 
+                  TikTok, Instagram, and Pinterest ads. Visitors landing from a campaign link experience a custom tailored cultural experience with personalized mascots, copy, and festive heritage!
+                </p>
+                <div className="flex flex-wrap items-center gap-3 text-xs">
+                  <div className="px-3 py-1.5 rounded-lg bg-[#0b2b20]/80 border border-[#1d5943] text-slate-300">
+                    Active Global Default:{" "}
+                    <span className="font-bold text-[#d4af37]">
+                      {themePresets[activeThemeId]?.name || activeThemeId}
+                    </span>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-lg bg-[#0b2b20]/80 border border-[#1d5943] text-slate-300">
+                    Available Cultural Editions:{" "}
+                    <span className="font-bold text-[#fef9ee]">4 Presets</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-start lg:items-end gap-2 shrink-0">
+                <a
+                  href={`/?theme=${activeThemeId.toLowerCase().replace("_", "-")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2.5 rounded-xl bg-[#d4af37] hover:bg-[#b89528] text-[#0b2b20] font-bold text-xs transition flex items-center space-x-2 shadow-lg"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>View Live Site as {activeThemeId.replace("_", " ")}</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Theme Presets Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* BLACK SANTA THEME */}
+            <div
+              className={`bg-[#144534]/70 border rounded-2xl p-6 shadow-xl backdrop-blur-md relative flex flex-col justify-between transition ${
+                activeThemeId === "BLACK_SANTA"
+                  ? "border-[#d4af37] ring-2 ring-[#d4af37]/40 shadow-[#d4af37]/10"
+                  : "border-[#1d5943] hover:border-slate-500"
+              }`}
+            >
+              <div>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-center space-x-3.5">
+                    <img
+                      src="/images/santa-logo.png"
+                      alt="Black Santa Portrait"
+                      className="w-14 h-14 rounded-full border-2 border-[#d4af37] shadow-md object-cover bg-black"
+                    />
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-bold font-festive text-lg text-[#fef9ee]">
+                          Black Santa & African-American
+                        </h3>
+                      </div>
+                      <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 mt-1">
+                        Heritage Edition
+                      </span>
+                    </div>
+                  </div>
+                  {activeThemeId === "BLACK_SANTA" && (
+                    <span className="px-2.5 py-1 rounded-full bg-[#d4af37] text-[#0b2b20] text-[10px] font-extrabold uppercase tracking-wide">
+                      Active Default
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-xs text-slate-300 space-y-2 mb-4 bg-[#0b2b20]/60 p-3.5 rounded-xl border border-[#1d5943]/60">
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Community Focus:</strong> African-American, African & Diaspora Families
+                  </p>
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Headline:</strong> "Celebrate the Holidays with Joy, Culture & Community"
+                  </p>
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Visual Mascot:</strong> High-res custom Black Santa portrait emblem
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 mb-5">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Targeted Ad Campaign URL (TikTok / IG / Pinterest / FB)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value="https://thesantacircle.com?theme=black-santa"
+                      className="flex-1 px-3 py-1.5 bg-[#0b2b20] border border-[#1d5943] rounded-lg text-xs text-slate-300 font-mono select-all focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleCopyLink("https://thesantacircle.com?theme=black-santa")}
+                      className="px-3 py-1.5 rounded-lg bg-[#1d5943] hover:bg-[#256f54] text-[#fef9ee] text-xs font-medium transition flex items-center space-x-1"
+                      title="Copy campaign link"
+                    >
+                      {copiedLink === "https://thesantacircle.com?theme=black-santa" ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                      <span>{copiedLink === "https://thesantacircle.com?theme=black-santa" ? "Copied" : "Copy"}</span>
+                    </button>
+                    <a
+                      href="/?theme=black-santa"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-[#0b2b20] hover:bg-[#1d5943] text-slate-300 transition"
+                      title="Preview in new tab"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#1d5943]/60 flex items-center justify-between">
+                <span className="text-xs text-slate-400">Sets entire website theme</span>
+                {activeThemeId === "BLACK_SANTA" ? (
+                  <span className="text-xs font-semibold text-[#d4af37] flex items-center space-x-1">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Current Platform Default</span>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handleActivateTheme("BLACK_SANTA")}
+                    disabled={savingTheme}
+                    className="px-3.5 py-1.5 rounded-xl bg-[#d4af37] hover:bg-[#b89528] text-[#0b2b20] text-xs font-bold transition flex items-center space-x-1.5"
+                  >
+                    {savingTheme && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Set as Platform Default</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* CLASSIC HOLIDAY THEME */}
+            <div
+              className={`bg-[#144534]/70 border rounded-2xl p-6 shadow-xl backdrop-blur-md relative flex flex-col justify-between transition ${
+                activeThemeId === "CLASSIC"
+                  ? "border-[#d4af37] ring-2 ring-[#d4af37]/40 shadow-[#d4af37]/10"
+                  : "border-[#1d5943] hover:border-slate-500"
+              }`}
+            >
+              <div>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-center space-x-3.5">
+                    <div className="w-14 h-14 rounded-full border-2 border-red-500/50 bg-red-950/40 flex items-center justify-center text-3xl shadow-md">
+                      🎅
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-bold font-festive text-lg text-[#fef9ee]">
+                          Classic Festive Holiday
+                        </h3>
+                      </div>
+                      <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-red-500/20 text-red-300 border border-red-500/40 mt-1">
+                        Traditional Edition
+                      </span>
+                    </div>
+                  </div>
+                  {activeThemeId === "CLASSIC" && (
+                    <span className="px-2.5 py-1 rounded-full bg-[#d4af37] text-[#0b2b20] text-[10px] font-extrabold uppercase tracking-wide">
+                      Active Default
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-xs text-slate-300 space-y-2 mb-4 bg-[#0b2b20]/60 p-3.5 rounded-xl border border-[#1d5943]/60">
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Community Focus:</strong> Traditional North Pole & All Family Gatherings
+                  </p>
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Headline:</strong> "Bring the Joy of Secret Santa Back to the Holidays"
+                  </p>
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Visual Mascot:</strong> Traditional Festive Santa
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 mb-5">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Targeted Ad Campaign URL (TikTok / IG / Pinterest / FB)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value="https://thesantacircle.com?theme=classic"
+                      className="flex-1 px-3 py-1.5 bg-[#0b2b20] border border-[#1d5943] rounded-lg text-xs text-slate-300 font-mono select-all focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleCopyLink("https://thesantacircle.com?theme=classic")}
+                      className="px-3 py-1.5 rounded-lg bg-[#1d5943] hover:bg-[#256f54] text-[#fef9ee] text-xs font-medium transition flex items-center space-x-1"
+                      title="Copy campaign link"
+                    >
+                      {copiedLink === "https://thesantacircle.com?theme=classic" ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                      <span>{copiedLink === "https://thesantacircle.com?theme=classic" ? "Copied" : "Copy"}</span>
+                    </button>
+                    <a
+                      href="/?theme=classic"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-[#0b2b20] hover:bg-[#1d5943] text-slate-300 transition"
+                      title="Preview in new tab"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#1d5943]/60 flex items-center justify-between">
+                <span className="text-xs text-slate-400">Sets entire website theme</span>
+                {activeThemeId === "CLASSIC" ? (
+                  <span className="text-xs font-semibold text-[#d4af37] flex items-center space-x-1">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Current Platform Default</span>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handleActivateTheme("CLASSIC")}
+                    disabled={savingTheme}
+                    className="px-3.5 py-1.5 rounded-xl bg-[#d4af37] hover:bg-[#b89528] text-[#0b2b20] text-xs font-bold transition flex items-center space-x-1.5"
+                  >
+                    {savingTheme && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Set as Platform Default</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* NAVIDAD & REYES MAGOS THEME */}
+            <div
+              className={`bg-[#144534]/70 border rounded-2xl p-6 shadow-xl backdrop-blur-md relative flex flex-col justify-between transition ${
+                activeThemeId === "NAVIDAD"
+                  ? "border-[#d4af37] ring-2 ring-[#d4af37]/40 shadow-[#d4af37]/10"
+                  : "border-[#1d5943] hover:border-slate-500"
+              }`}
+            >
+              <div>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-center space-x-3.5">
+                    <div className="w-14 h-14 rounded-full border-2 border-emerald-500/50 bg-emerald-950/40 flex items-center justify-center text-3xl shadow-md">
+                      🎅🏽
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-bold font-festive text-lg text-[#fef9ee]">
+                          Navidad & Reyes Magos
+                        </h3>
+                      </div>
+                      <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mt-1">
+                        Edición Familiar (Latino / Hispanic)
+                      </span>
+                    </div>
+                  </div>
+                  {activeThemeId === "NAVIDAD" && (
+                    <span className="px-2.5 py-1 rounded-full bg-[#d4af37] text-[#0b2b20] text-[10px] font-extrabold uppercase tracking-wide">
+                      Active Default
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-xs text-slate-300 space-y-2 mb-4 bg-[#0b2b20]/60 p-3.5 rounded-xl border border-[#1d5943]/60">
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Community Focus:</strong> Hispanic, Latino & Bilingual Families (Amigo Secreto)
+                  </p>
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Headline:</strong> "El Intercambio Navideño Más Fácil y Divertido"
+                  </p>
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Visual Mascot:</strong> 🎅🏽 Santa Latino & Regalos Navideños
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 mb-5">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Targeted Ad Campaign URL (TikTok / IG / Pinterest / FB)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value="https://thesantacircle.com?theme=navidad"
+                      className="flex-1 px-3 py-1.5 bg-[#0b2b20] border border-[#1d5943] rounded-lg text-xs text-slate-300 font-mono select-all focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleCopyLink("https://thesantacircle.com?theme=navidad")}
+                      className="px-3 py-1.5 rounded-lg bg-[#1d5943] hover:bg-[#256f54] text-[#fef9ee] text-xs font-medium transition flex items-center space-x-1"
+                      title="Copy campaign link"
+                    >
+                      {copiedLink === "https://thesantacircle.com?theme=navidad" ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                      <span>{copiedLink === "https://thesantacircle.com?theme=navidad" ? "Copied" : "Copy"}</span>
+                    </button>
+                    <a
+                      href="/?theme=navidad"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-[#0b2b20] hover:bg-[#1d5943] text-slate-300 transition"
+                      title="Preview in new tab"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#1d5943]/60 flex items-center justify-between">
+                <span className="text-xs text-slate-400">Sets entire website theme</span>
+                {activeThemeId === "NAVIDAD" ? (
+                  <span className="text-xs font-semibold text-[#d4af37] flex items-center space-x-1">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Current Platform Default</span>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handleActivateTheme("NAVIDAD")}
+                    disabled={savingTheme}
+                    className="px-3.5 py-1.5 rounded-xl bg-[#d4af37] hover:bg-[#b89528] text-[#0b2b20] text-xs font-bold transition flex items-center space-x-1.5"
+                  >
+                    {savingTheme && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Set as Platform Default</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* WINTER GLOW / MULTICULTURAL THEME */}
+            <div
+              className={`bg-[#144534]/70 border rounded-2xl p-6 shadow-xl backdrop-blur-md relative flex flex-col justify-between transition ${
+                activeThemeId === "MULTICULTURAL"
+                  ? "border-[#d4af37] ring-2 ring-[#d4af37]/40 shadow-[#d4af37]/10"
+                  : "border-[#1d5943] hover:border-slate-500"
+              }`}
+            >
+              <div>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-center space-x-3.5">
+                    <div className="w-14 h-14 rounded-full border-2 border-cyan-500/50 bg-cyan-950/40 flex items-center justify-center text-3xl shadow-md">
+                      ❄️
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-bold font-festive text-lg text-[#fef9ee]">
+                          Winter Glow
+                        </h3>
+                      </div>
+                      <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 mt-1">
+                        Universal & Workplace Edition
+                      </span>
+                    </div>
+                  </div>
+                  {activeThemeId === "MULTICULTURAL" && (
+                    <span className="px-2.5 py-1 rounded-full bg-[#d4af37] text-[#0b2b20] text-[10px] font-extrabold uppercase tracking-wide">
+                      Active Default
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-xs text-slate-300 space-y-2 mb-4 bg-[#0b2b20]/60 p-3.5 rounded-xl border border-[#1d5943]/60">
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Community Focus:</strong> Diverse Workplaces, Friend Circles & Modern Gatherings
+                  </p>
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Headline:</strong> "Effortless Holiday Gift Exchanges for Everyone"
+                  </p>
+                  <p className="text-slate-400">
+                    <strong className="text-slate-200">Visual Mascot:</strong> ❄️ Frost Star & Elegant Winter Glow
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 mb-5">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Targeted Ad Campaign URL (TikTok / IG / Pinterest / FB)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value="https://thesantacircle.com?theme=winter-glow"
+                      className="flex-1 px-3 py-1.5 bg-[#0b2b20] border border-[#1d5943] rounded-lg text-xs text-slate-300 font-mono select-all focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleCopyLink("https://thesantacircle.com?theme=winter-glow")}
+                      className="px-3 py-1.5 rounded-lg bg-[#1d5943] hover:bg-[#256f54] text-[#fef9ee] text-xs font-medium transition flex items-center space-x-1"
+                      title="Copy campaign link"
+                    >
+                      {copiedLink === "https://thesantacircle.com?theme=winter-glow" ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                      <span>{copiedLink === "https://thesantacircle.com?theme=winter-glow" ? "Copied" : "Copy"}</span>
+                    </button>
+                    <a
+                      href="/?theme=winter-glow"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-[#0b2b20] hover:bg-[#1d5943] text-slate-300 transition"
+                      title="Preview in new tab"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#1d5943]/60 flex items-center justify-between">
+                <span className="text-xs text-slate-400">Sets entire website theme</span>
+                {activeThemeId === "MULTICULTURAL" ? (
+                  <span className="text-xs font-semibold text-[#d4af37] flex items-center space-x-1">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Current Platform Default</span>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handleActivateTheme("MULTICULTURAL")}
+                    disabled={savingTheme}
+                    className="px-3.5 py-1.5 rounded-xl bg-[#d4af37] hover:bg-[#b89528] text-[#0b2b20] text-xs font-bold transition flex items-center space-x-1.5"
+                  >
+                    {savingTheme && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Set as Platform Default</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* EDIT CIRCLE MODAL */}
       {editingCircle && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#144534] border border-[#d4af37]/40 rounded-2xl p-6 max-w-md w-full shadow-2xl">
             <h3 className="text-lg font-bold font-festive text-[#fef9ee] mb-3">Edit Circle</h3>
-            <div className="mb-4">
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                Circle Name
-              </label>
-              <input
-                type="text"
-                value={editCircleName}
-                onChange={(e) => setEditCircleName(e.target.value)}
-                className="w-full px-4 py-2.5 bg-[#0b2b20] border border-[#1d5943] rounded-xl text-slate-100 text-sm focus:outline-none focus:border-[#d4af37]"
-              />
+            <div className="space-y-4 mb-5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  Circle Name
+                </label>
+                <input
+                  type="text"
+                  value={editCircleName}
+                  onChange={(e) => setEditCircleName(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#0b2b20] border border-[#1d5943] rounded-xl text-slate-100 text-sm focus:outline-none focus:border-[#d4af37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  Cultural Theme & Mascot
+                </label>
+                <select
+                  value={editCircleTheme}
+                  onChange={(e) => setEditCircleTheme(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#0b2b20] border border-[#1d5943] rounded-xl text-slate-100 text-sm focus:outline-none focus:border-[#d4af37]"
+                >
+                  <option value="BLACK_SANTA">🎅🏿 Black Santa & African-American Heritage</option>
+                  <option value="CLASSIC">🎅 Classic Festive Holiday (Traditional)</option>
+                  <option value="NAVIDAD">🎅🏽 Navidad & Reyes Magos (Latino / Hispanic)</option>
+                  <option value="MULTICULTURAL">❄️ Winter Glow (Inclusive Multicultural)</option>
+                </select>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Sets the cultural identity and greetings for this specific Circle.
+                </p>
+              </div>
             </div>
             <div className="flex items-center justify-end space-x-2">
               <button

@@ -14,7 +14,7 @@ export async function PATCH(
   const { id } = await params;
   try {
     const body = await req.json();
-    const { name, isPremium } = body;
+    const { name, isPremium, culturalTheme } = body;
 
     const circle = await prisma.familyGroup.findUnique({
       where: { id },
@@ -25,10 +25,18 @@ export async function PATCH(
       return NextResponse.json({ error: "Circle not found." }, { status: 404 });
     }
 
+    const updateData: { name?: string; culturalTheme?: string } = {};
     if (name && typeof name === "string") {
+      updateData.name = name.trim();
+    }
+    if (culturalTheme && typeof culturalTheme === "string") {
+      updateData.culturalTheme = culturalTheme;
+    }
+
+    if (Object.keys(updateData).length > 0) {
       await prisma.familyGroup.update({
         where: { id },
-        data: { name: name.trim() },
+        data: updateData,
       });
     }
 

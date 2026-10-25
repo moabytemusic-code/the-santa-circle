@@ -40,6 +40,7 @@ export async function GET() {
         id: circle.id,
         name: circle.name,
         description: circle.description,
+        culturalTheme: circle.culturalTheme || "CLASSIC",
         createdAt: circle.createdAt,
         creator: circle.creator,
         membersCount: circle.memberships.length,

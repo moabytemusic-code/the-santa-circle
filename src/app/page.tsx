@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
+import { getActiveThemeServer } from "@/lib/theme";
 import {
   Gift,
   ShieldCheck,
@@ -13,7 +14,13 @@ import {
   Users,
 } from "lucide-react";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ theme?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const currentTheme = await getActiveThemeServer(resolvedParams?.theme);
   const user = await getSession();
 
   // Calculate days until Christmas
@@ -30,23 +37,41 @@ export default async function HomePage() {
     <div className="space-y-20 py-6 sm:py-12">
       {/* Hero Section */}
       <section className="text-center space-y-6 max-w-4xl mx-auto px-4">
-        <div className="text-6xl sm:text-7xl animate-float">🎅</div>
+        {/* Cultural Theme Mascot */}
+        {currentTheme.mascotType === "image" ? (
+          <div className="flex justify-center">
+            <img
+              src={currentTheme.mascotValue}
+              alt={currentTheme.name}
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-[#d4af37] shadow-2xl animate-float object-cover bg-[#144534]"
+            />
+          </div>
+        ) : (
+          <div className="text-6xl sm:text-7xl animate-float">{currentTheme.mascotValue}</div>
+        )}
 
-        <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#144534] border border-[#d4af37]/40 text-[#f3c053] text-sm shadow-sm">
-          <Sparkles className="w-4 h-4 text-[#d4af37]" />
-          <span>{diffDays} days until Christmas!</span>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#144534] border border-[#d4af37]/40 text-[#f3c053] text-sm shadow-sm">
+            <Sparkles className="w-4 h-4 text-[#d4af37]" />
+            <span>{diffDays} days until Christmas!</span>
+          </div>
+          {currentTheme.id !== "CLASSIC" && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/40 text-[#f3c053] text-xs font-bold uppercase tracking-wider">
+              {currentTheme.badge}
+            </span>
+          )}
         </div>
 
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#fef9ee] font-festive">
-          The Santa Circle
+          {currentTheme.appName}
         </h1>
 
         <p className="text-lg sm:text-2xl text-[#f3c053] font-medium max-w-2xl mx-auto">
-          Modern, Sleek &amp; Ad-Free Secret Santa for Families &amp; Teams.
+          {currentTheme.heroHeadline}
         </p>
 
         <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto">
-          No cluttered banner ads. No confusing sign-up mazes. Just clean pairings, smart exclusion rules, secret wishlists, and festive holiday magic.
+          {currentTheme.heroSubheadline}
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
@@ -64,7 +89,7 @@ export default async function HomePage() {
                 href="/register"
                 className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 rounded-full bg-[#d4af37] text-[#0b2b20] font-bold text-base hover:bg-[#f3c053] transition shadow-lg shadow-[#d4af37]/20 cursor-pointer"
               >
-                <span>Start a Free Circle</span>
+                <span>{currentTheme.callToAction}</span>
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link

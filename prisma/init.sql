@@ -242,3 +242,11 @@ CREATE INDEX IF NOT EXISTS "MusicTrack_isActive_idx" ON "MusicTrack"("isActive")
 ALTER TABLE "GiftExchange" ADD COLUMN IF NOT EXISTS "isPremium" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "GiftExchange" ADD COLUMN IF NOT EXISTS "stripeSessionId" TEXT;
 ALTER TABLE "GiftExchange" ADD COLUMN IF NOT EXISTS "stripeCustomerId" TEXT;
+
+-- Idempotent upgrades for Cultural Themes & Platform Settings
+ALTER TABLE "FamilyGroup" ADD COLUMN IF NOT EXISTS "culturalTheme" TEXT DEFAULT 'CLASSIC';
+CREATE TABLE IF NOT EXISTS "PlatformSetting" (
+    "key" TEXT NOT NULL PRIMARY KEY,
+    "value" TEXT NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
