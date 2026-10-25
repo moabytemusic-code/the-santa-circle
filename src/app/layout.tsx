@@ -44,8 +44,37 @@ export default async function RootLayout({
 }) {
   const user = await getSession();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "The Santa Circle",
+    "url": "https://thesantacircle.com",
+    "description":
+      "Modern, ad-free Secret Santa generator with smart exclusions, budget rules, and Amazon wishlists.",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "All",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+    },
+    "featureList": [
+      "Smart Pair Exclusions",
+      "Amazon Wishlist Integration",
+      "Instant Email Invitations",
+      "Budget & Spending Limits",
+      "Private Recipient Reveal",
+    ],
+  };
+
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="bg-[#0b2b20] text-slate-100 min-h-screen flex flex-col antialiased selection:bg-[#d4af37] selection:text-[#0b2b20]">
         <SnowCanvas />
         <Navbar user={user} />

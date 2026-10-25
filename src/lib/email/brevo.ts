@@ -104,6 +104,16 @@ function wrapFestiveTemplate(title: string, bodyContent: string): string {
     </div>
     <div class="content">
       ${bodyContent}
+
+      <div style="margin-top: 28px; padding: 18px 20px; background-color: #0b2b20; border-radius: 12px; border: 1px dashed #d4af37; text-align: center;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: bold; color: #fef9ee;">
+          🎄 Hosting another gift exchange for coworkers or friends?
+        </p>
+        <p style="margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+          Set up rules, budgets, and Amazon wishlists in 60 seconds for free.<br>
+          <a href="https://thesantacircle.com" style="color: #f3c053; font-weight: bold; text-decoration: underline; display: inline-block; margin-top: 4px;">Start a Free Circle at TheSantaCircle.com &rarr;</a>
+        </p>
+      </div>
     </div>
     <div class="footer">
       Sent with cheer from <strong>The Santa Circle</strong> (<a href="https://thesantacircle.com" style="color: #f3c053; text-decoration: none;">theSantaCircle.com</a>).<br>
