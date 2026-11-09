@@ -11,16 +11,28 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     {
+      url: `${baseUrl}/gift-guides`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/games-bundle`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/register`,
       lastModified: new Date(),
       changeFrequency: "weekly",
-      priority: 0.9,
+      priority: 0.8,
     },
     {
       url: `${baseUrl}/login`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.5,
+      priority: 0.4,
     },
   ];
 }

@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     "online Secret Santa generator",
   ],
   metadataBase: new URL("https://thesantacircle.com"),
+  alternates: {
+    canonical: "./",
+  },
   openGraph: {
     title: "The Santa Circle - Modern Secret Santa",
     description: "The sleek, modern, and ad-free Secret Santa platform with smart exclusions and wishlists.",
