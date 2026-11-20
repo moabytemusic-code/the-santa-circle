@@ -5,7 +5,14 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/login", "/register", "/gift-guides", "/games-bundle"],
+        allow: [
+          "/",
+          "/login",
+          "/register",
+          "/secret-santa-generator-with-exclusions",
+          "/gift-guides",
+          "/games-bundle",
+        ],
         disallow: [
           "/api/",
           "/admin",
