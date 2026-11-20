@@ -14,6 +14,16 @@ const nextConfig = {
       bodySizeLimit: "15mb",
     },
   },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.thesantacircle.com" }],
+        destination: "https://thesantacircle.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
