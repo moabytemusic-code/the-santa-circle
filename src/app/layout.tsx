@@ -90,7 +90,27 @@ export default async function RootLayout({
             <span className="font-festive text-sm text-[#fef9ee] font-bold">The Santa Circle</span>
             <span>&bull; Modern & Ad-Free Gift Exchanges</span>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-slate-300 mb-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-slate-300 mb-3 max-w-4xl mx-auto px-4">
+            <a href="/white-elephant-vs-secret-santa" className="hover:text-[#d4af37] transition">
+              White Elephant vs. Secret Santa
+            </a>
+            <span>&bull;</span>
+            <a href="/white-elephant-rules" className="hover:text-[#d4af37] transition">
+              White Elephant Rules
+            </a>
+            <span>&bull;</span>
+            <a href="/generator-for-secret-santa" className="hover:text-[#d4af37] transition">
+              Generator for Secret Santa
+            </a>
+            <span>&bull;</span>
+            <a href="/secret-santa-app" className="hover:text-[#d4af37] transition">
+              Secret Santa App
+            </a>
+            <span>&bull;</span>
+            <a href="/secret-santa-wishlist" className="hover:text-[#d4af37] transition">
+              Wishlist Guide
+            </a>
+            <span>&bull;</span>
             <a href="/secret-santa-generator-with-exclusions" className="hover:text-[#d4af37] transition">
               Exclusion Rules Generator
             </a>
@@ -100,7 +120,7 @@ export default async function RootLayout({
             </a>
             <span>&bull;</span>
             <a href="/games-bundle" className="hover:text-[#d4af37] transition">
-              Party Games Bundle
+              Party Games Bundle ($9.99)
             </a>
             <span>&bull;</span>
             <a href="/register" className="text-[#f3c053] hover:text-[#d4af37] font-semibold transition">
